@@ -1,0 +1,24 @@
+package edu.stonybrook.cs.wingslab.commons;
+
+/**
+ * Square shape.
+ * @author Mohammad Ghaderibaneh <mghaderibane@cs.stonybrook.edu>
+ * @version 1.0
+ * @since 1.0
+ */
+public class Square extends Rectangle{
+    /**
+     * Create Square object given side, originated in Point(0, 0)
+     *
+     * @param side square side
+     */
+
+    public Square(int side) {
+        super(side, side);
+    }
+
+    @Override
+    public String toString() {
+        return "%1$s: side= %2$s".formatted(Square.class.getSimpleName(), this.getLength());
+    }
+}
