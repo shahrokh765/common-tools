@@ -236,8 +236,8 @@ public class Splat extends PropagationModel{
             Splat.plDict.put(srcKey, new ConcurrentHashMap<>());
         Splat.plDict.get(srcKey).put(destKey, pathLossValue);
 
-        this.fetchNum++;
-        this.fetchTime += (System.currentTimeMillis() - tmpExecTime)/1000;  // add seconds to the whole running time
+        this.execNum++;
+        this.execTime += (System.currentTimeMillis() - tmpExecTime)/1000;  // add seconds to the whole running time
         return pathLossValue;
     }
 
@@ -295,9 +295,55 @@ public class Splat extends PropagationModel{
     public int getExecNum() { return execNum; }
 
     public static void setPlDict(ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Double>> plDict) {
-        Splat.plDict = plDict; }
+        Splat.plDict = plDict;
+    }
 
+    /**Serializing path-loss map in a file.
+     * @param path path(including name) where you want to serialize the map.*/
+    public static void serializePlDict(String path, String fileName) {
+        if (!Files.isDirectory(Paths.get(path))) {
+            try {
+                Files.createDirectories(Paths.get(path));
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Serialization was not successful! Directory creation was failed.");
+                return;
+            }
+        }
+        try(FileOutputStream fos = new FileOutputStream(String.join("/",path.split("/"))
+                + "/" + fileName);
+            ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(plDict);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Serialization was not successful! Saving map failed");
+        }
+    }
 
+    public static void deserializePlDict(String path, String fileName){
+        if (!Files.isDirectory(Paths.get(path))) {
+            System.out.println("Deserialization was not successful! Directory is not existed.");
+            return;
+        }
+        FileInputStream fis = null;
+        try{
+            fis = new FileInputStream(String.join("/",path.split("/"))
+                    + "/" + fileName);
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+            System.out.println("Deserialization was not successful! File was not found.");
+            return;
+        }
+        try {
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            plDict = (ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, Double>>) ois.readObject();
+            fis.close();
+            ois.close();
+        }catch (IOException | ClassNotFoundException e){
+            e.printStackTrace();
+            System.out.println("Deserialization was not successful!");
+        }
+    }
 
     /**
      * version = 1.0
@@ -309,4 +355,5 @@ public class Splat extends PropagationModel{
     public String toString() {
         return null;
     }
+
 }

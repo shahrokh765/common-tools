@@ -19,6 +19,6 @@ public class Square extends Rectangle{
 
     @Override
     public String toString() {
-        return "%1$s: side= %2$s".formatted(Square.class.getSimpleName(), this.getLength());
+        return "%1$s%2$s".formatted(Square.class.getSimpleName().toLowerCase(), this.getLength());
     }
 }

@@ -117,6 +117,6 @@ public class Rectangle extends Shape{
 
     @Override
     public String toString() {
-        return String.format("%1$s: width= %2$s, length= %3$s", Rectangle.class.getSimpleName(), width, length);
+        return String.format("%1$s%2$s_%3$s", Rectangle.class.getSimpleName().toLowerCase(), width, length);
     }
 }

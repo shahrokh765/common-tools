@@ -31,11 +31,20 @@ public class SpectrumSensor {
      * @param std standard deviation of received values*/
     public SpectrumSensor(RX rx, double cost, double std){
         super();
-        this.ssId = String.format("SS%1$d", ssIntId);
+        this.ssId = String.format("SS%1$d", ssIntId++);
         this.rx = rx;
         this.cost = cost;
         this.std = std;
-        SpectrumSensor.ssIntId++;
+    }
+
+    /**Copy constructor that gets a SpectrumSensor object and create a new one with equal values.*/
+    public SpectrumSensor(SpectrumSensor spectrumSensor){
+        super();
+        this.ssId = spectrumSensor.ssId;
+        this.rx = new RX(new Element(new Point(spectrumSensor.rx.getElement().getLocation().getCartesian()),
+                spectrumSensor.rx.getElement().getHeight()));
+        this.cost = spectrumSensor.cost;
+        this.std = spectrumSensor.std;
     }
 
     /**reset sensor's received power*/
@@ -63,6 +72,10 @@ public class SpectrumSensor {
      * @return array of sensors
      * @since 1.0*/
     public static SpectrumSensor[] SensorReader(String sensorFilePath) throws IOException{
+//        String cwd = System.getProperty("user.dir");
+//        String classDir = SpectrumSensor.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+//        System.setProperty("user.dir", classDir);
+//        System.out.println(System.getProperty("user.dir"));
         ArrayList<SpectrumSensor> sensors = new ArrayList<>();
         Path path = Paths.get(sensorFilePath);
         Scanner scanner = new Scanner(path);
@@ -101,6 +114,7 @@ public class SpectrumSensor {
                     std));
         }
         scanner.close();
+//        System.setProperty("user.dir", cwd);                    // changing back to cwd
         return sensors.toArray(new SpectrumSensor[sensors.size()]);
     }
 
@@ -128,15 +142,11 @@ public class SpectrumSensor {
 
     // given number of sensors and grid shape, file name would be created
     private static String filePath(int numberOfSensors, Shape grid){
-        int x, y;               //length and width
         String gridShapeFormat;
         if (grid instanceof Square square){
-            x = square.getLength();
-            gridShapeFormat = "square" + x;
+            gridShapeFormat = square.toString();
         }else if(grid instanceof Rectangle rect){
-            x = rect.getWidth();
-            y = rect.getLength();
-            gridShapeFormat = String.format("rectangle%1$d_%2$d", x, y);
+            gridShapeFormat = rect.toString();
         }else{
             throw new IllegalArgumentException("given grid shape" + grid.getClass().getSimpleName() +
                     "is not supported.");
