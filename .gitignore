@@ -27,4 +27,5 @@ hs_err_pid*
 *.qth
 
 *-to-*.txt
-/target
+target
+resources/splat/
