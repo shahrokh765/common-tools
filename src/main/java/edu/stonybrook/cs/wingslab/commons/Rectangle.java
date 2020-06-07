@@ -12,6 +12,14 @@ import java.util.logging.Logger;
 public class Rectangle extends Shape{
     private final int width, length;
 
+    /**Copy constructor
+     * @param rectangle Rectangle object*/
+    public Rectangle(Rectangle rectangle){
+        super();
+        this.width = rectangle.width;
+        this.length = rectangle.length;
+    }
+
     /**
      * Create Rectangle object given length and width originated in Point(0, 0)*/
     public Rectangle(int width, int length){

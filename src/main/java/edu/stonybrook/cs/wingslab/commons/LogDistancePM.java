@@ -21,6 +21,21 @@ public class LogDistancePM extends PropagationModel{
     private final double distReference; // reference distance where path-loss is plReference. 1.0 if not provided
     private final Random gauss;
 
+    /**Copy constructor.
+     * @param logDistancePM LogDistancePM object*/
+    public LogDistancePM(LogDistancePM logDistancePM){
+        super();
+        this.alpha = logDistancePM.alpha;
+        this.multiPathNoise = logDistancePM.multiPathNoise;
+        this.multiPathStd = logDistancePM.multiPathStd;
+        this.shadow = logDistancePM.shadow;
+        this.shadowAmp = logDistancePM.shadowAmp;
+        this.shadowPeriod = logDistancePM.shadowPeriod;
+        this.plReference = logDistancePM.plReference;
+        this.distReference = logDistancePM.distReference;
+        this.gauss = new Random();
+    }
+
     /**
      * General log-distance constructor with shadowing and multi-path effects.
      * version = 1.0

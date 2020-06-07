@@ -12,10 +12,13 @@ public class Square extends Rectangle{
      *
      * @param side square side
      */
-
     public Square(int side) {
         super(side, side);
     }
+
+    /**Copy constructor
+     * @param square Square object*/
+    public Square(Square square){ super(square.getWidth(), square.getLength()); }
 
     @Override
     public String toString() {
