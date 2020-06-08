@@ -54,7 +54,7 @@ final class SplatSite{
                 tp,
                 Math.abs((int)point.getLat() * 1000),
                 Math.abs((int)point.getLon() * 1000),
-                ThreadLocalRandom.current().nextInt(0, 100000));
+                ThreadLocalRandom.current().nextInt(0, 100000000));
 
     }
 
@@ -129,10 +129,10 @@ public class Splat extends PropagationModel{
             ConcurrentHashMap<String, Double>> plDict;            // hash dictionary for path-loss values
 
     private final GeographicPoint reference;                                    //upper left corner of the field
-    private double fetchTime = 0.0;
-    private int fetchNum = 0;
-    private double execTime = 0.0;
-    private int execNum = 0;
+    private long fetchTime = 0;
+    private long fetchNum = 0;
+    private long execTime = 0;
+    private long execNum = 0;
 
     /**Splat constructor
      * @param reference left-upper GeographicPoint reference*/
@@ -298,13 +298,13 @@ public class Splat extends PropagationModel{
 
     public GeographicPoint getReference() { return reference; }
 
-    public double getFetchTime() { return fetchTime; }
+    public long getFetchTime() { return fetchTime; }
 
-    public int getFetchNum() { return fetchNum; }
+    public long getFetchNum() { return fetchNum; }
 
-    public double getExecTime() { return execTime; }
+    public long getExecTime() { return execTime; }
 
-    public int getExecNum() { return execNum; }
+    public long getExecNum() { return execNum; }
 
     public static void setPlDict(ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> plDict) {
         Splat.plDict = plDict;
@@ -365,8 +365,8 @@ public class Splat extends PropagationModel{
 
     public static void main(String[] args) throws InterruptedException {
 //        System.out.println(String.format("%04d%04d", 459, 789));
-        System.out.println(Runtime.getRuntime().availableProcessors());
-        System.exit(0);
+//        System.out.println(Runtime.getRuntime().availableProcessors());
+//        System.exit(0);
         Splat.readPlDictFromJson("resources/splat/pl_map/pl_map.json");
 //        ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> map = new ConcurrentHashMap<>();
 //        map.put("23", new ConcurrentHashMap<>());
