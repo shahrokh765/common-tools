@@ -369,7 +369,7 @@ public class Splat extends PropagationModel{
 //        System.out.println(String.format("%04d%04d", 459, 789));
 //        System.out.println(Runtime.getRuntime().availableProcessors());
 //        System.exit(0);
-        Splat.readPlDictFromJson("resources/splat/pl_map/pl_map_array.json.new");
+        Splat.readPlDictFromJson("resources/splat/pl_map/pl_map_array.json");
 //        ConcurrentHashMap<String, ConcurrentHashMap<String, Double>> map = new ConcurrentHashMap<>();
 //        map.put("23", new ConcurrentHashMap<>());
 //        map.get("23").put("11", 10.4);
