@@ -26,7 +26,7 @@ public final class WirelessTools {
      */
     public static double getDB(double decimalValue){
         if (decimalValue <= 0)
-            return Double.MIN_VALUE;
+            return Double.NEGATIVE_INFINITY;
         return 10 * Math.log10(decimalValue);
     }
 }
