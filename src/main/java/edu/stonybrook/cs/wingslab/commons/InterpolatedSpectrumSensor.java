@@ -59,20 +59,20 @@ public class InterpolatedSpectrumSensor {
                         this.sss[i].getRx().getElement().getLocation().distance(
                                 iss.getRx().getElement().getLocation()));
             Arrays.sort(ssd, Comparator.comparing(SensorDistance::getDistance));    //O(#sslog(#ss))
-            double totalInverseWeight = 0.0;        // calculate total weight
+            double totalWeight = 0.0;        // calculate total weight
             for (int w = 0; w < numberOfInterpolatedSensor; w++)
-                totalInverseWeight += switch (interpolationType){
-                    case LINEAR: yield ssd[w].getDistance();
-                    case LOG: yield Math.log10(ssd[w].getDistance());
+                totalWeight += switch (interpolationType){
+                    case LINEAR: yield 1 / ssd[w].getDistance();
+                    case LOG: yield 1 / Math.log10(1 + ssd[w].getDistance());
                 };
             //calculating interpolated value
             double interPower = 0.0;
             for (int w = 0; w < numberOfInterpolatedSensor; w++){
                 double weight = switch (interpolationType){
-                    case LINEAR: yield ssd[w].getDistance();
-                    case LOG: yield Math.log10(ssd[w].getDistance());
+                    case LINEAR: yield 1 / ssd[w].getDistance();
+                    case LOG: yield 1 / Math.log10(1 + ssd[w].getDistance());
                 };
-                interPower += ssd[w].getSensor().getRx().getReceived_power() / weight / 1 / totalInverseWeight;
+                interPower += ssd[w].getSensor().getRx().getReceived_power() * weight / totalWeight;
             }
             iss.getRx().setReceived_power(interPower);
         }
