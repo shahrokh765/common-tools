@@ -44,7 +44,8 @@ public class InterpolatedSpectrumSensor {
      * @param interpolationType IDW type either Log(distance) or distance
      * @param numberOfInterpolatedSensor number of known sensors to use for interpolation*/
     public InterpolatedSpectrumSensor(SpectrumSensor[] sss, SpectrumSensor[] interSss,
-                                      InterpolationType interpolationType, int numberOfInterpolatedSensor){
+                                      InterpolationType interpolationType, int numberOfInterpolatedSensor,
+                                      int cellSize){
         this.sss = sss;
         // number od interpolated sensors
         this.interSss = interSss;
@@ -56,21 +57,25 @@ public class InterpolatedSpectrumSensor {
             SensorDistance[] ssd = new SensorDistance[this.sss.length];     // arrays of sensors with distance to iss
             for (int i = 0; i < this.sss.length; i++)   //O(#ss)
                 ssd[i] = new SensorDistance(this.sss[i],
-                        this.sss[i].getRx().getElement().getLocation().distance(
-                                iss.getRx().getElement().getLocation()));
+                        this.sss[i].getRx().getElement().getLocation().mul(cellSize).distance(
+                                iss.getRx().getElement().getLocation().mul(cellSize)));
             Arrays.sort(ssd, Comparator.comparing(SensorDistance::getDistance));    //O(#sslog(#ss))
+            if (ssd[0].getDistance() == 0.0) {   // they are the same
+                iss.getRx().setReceived_power(ssd[0].getSensor().getRx().getReceived_power());
+                continue;
+            }
             double totalWeight = 0.0;        // calculate total weight
             for (int w = 0; w < numberOfInterpolatedSensor; w++)
                 totalWeight += switch (interpolationType){
-                    case LINEAR: yield 1 / ssd[w].getDistance();
-                    case LOG: yield 1 / Math.log10(1 + ssd[w].getDistance());
+                    case LINEAR: yield 1 / (ssd[w].getDistance() + Double.MIN_VALUE);
+                    case LOG: yield 1 / Math.log10(1 + ssd[w].getDistance() + Double.MIN_VALUE);
                 };
             //calculating interpolated value
             double interPower = 0.0;
             for (int w = 0; w < numberOfInterpolatedSensor; w++){
                 double weight = switch (interpolationType){
-                    case LINEAR: yield 1 / ssd[w].getDistance();
-                    case LOG: yield 1 / Math.log10(1 + ssd[w].getDistance());
+                    case LINEAR: yield 1 / (ssd[w].getDistance() +  + Double.MIN_VALUE);
+                    case LOG: yield 1 / Math.log10(1 + ssd[w].getDistance() + Double.MIN_VALUE);
                 };
                 interPower += ssd[w].getSensor().getRx().getReceived_power() * weight / totalWeight;
             }
