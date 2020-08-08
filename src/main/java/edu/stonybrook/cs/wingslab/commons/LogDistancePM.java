@@ -139,7 +139,11 @@ public class LogDistancePM extends PropagationModel{
      */
     @Override
     public double pathLoss(Element src, Element dest) {
-        double distance = src.getLocation().distance(dest.getLocation()) / this.distReference;
+        return pathLoss(src.getLocation().distance(dest.getLocation()));
+    }
+
+    public double pathLoss(double distance){
+        distance /= this.distReference;
         double loss = this.plReference;
         if (distance > 1.0) {
             loss += 10 * this.alpha * Math.log10(distance); // add distance-based loss
