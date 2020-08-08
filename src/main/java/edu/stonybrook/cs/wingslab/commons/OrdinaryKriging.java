@@ -73,10 +73,16 @@ public class OrdinaryKriging {
         CurveFitter<ParametricUnivariateFunction> curveFitter = new CurveFitter<>(new LevenbergMarquardtOptimizer());
         for (int i = 0; i < n; i++)
             curveFitter.addObservedPoint(distance(locations[i][0], locations[i][1], this.x, this.y), values[i]);
-        double[] initialGuess = {1.0, 1.0};
+        double[] initialGuess = {Math.random(), Math.random()};
+        System.out.println("fitting");
         double[] params = curveFitter.fit(variogramFunc, initialGuess); //params[0]: sill, params[1]: range
+
+        if (params[0] == 0)
+            return 0.0;
+        System.out.println("interpolating");
         KrigingInterpolation krigingInterpolation = new KrigingInterpolation(this.locations, this.values,
-                new ExponentialVariogram(params[1], params[0]), null);
+                new ExponentialVariogram(Math.abs(params[1]), Math.abs(params[0])), null);
+
         return krigingInterpolation.interpolate(this.x, this.y);
     }
 
