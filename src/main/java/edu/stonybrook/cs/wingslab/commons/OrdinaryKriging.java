@@ -1,13 +1,21 @@
 package edu.stonybrook.cs.wingslab.commons;
 
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
+import org.apache.commons.math3.fitting.AbstractCurveFitter;
 import org.apache.commons.math3.fitting.CurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoint;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
+import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
 import smile.interpolation.KrigingInterpolation;
 import smile.interpolation.variogram.ExponentialVariogram;
+import smile.interpolation.variogram.Variogram;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**2-D Ordinary Kriging interpolation method.
  * A list of locations would be passed along with values.
@@ -15,6 +23,32 @@ import java.util.PriorityQueue;
  * @since 1.1
  */
 public class OrdinaryKriging {
+    private class CurveFitter extends AbstractCurveFitter {
+        @Override
+        protected LeastSquaresProblem getProblem(Collection<WeightedObservedPoint> points) {
+            final int len = points.size();
+            final double[] target = new double[len];
+            final double[] weights = new double[len];
+            double[] initialGuess = {1, 1};
+
+            int i = 0;
+            for (WeightedObservedPoint point : points) {
+                target[i] = point.getY();
+                weights[i] = point.getWeight();
+                i += 1;
+            }
+            final AbstractCurveFitter.TheoreticalValuesFunction model = new
+                    AbstractCurveFitter.TheoreticalValuesFunction(new ExponentialFunc(), points);
+            return new LeastSquaresBuilder().
+                    maxEvaluations(Integer.MAX_VALUE).
+                    maxIterations(Integer.MAX_VALUE).
+                    start(initialGuess).
+                    target(target).
+                    weight(new DiagonalMatrix(weights)).
+                    model(model.getModelFunction(), model.getModelFunctionJacobian()).
+                    build();
+        }
+    }
 //    private class SensorDistance {// used to find nearest objects(heap)
 //        int id;
 //        double distance;
@@ -45,7 +79,23 @@ public class OrdinaryKriging {
 //    private final Element requestingSu;
 
 
-//    public double[] getTxsSuPL() { return txsSuPL; }
+    //    public double[] getTxsSuPL() { return txsSuPL; }
+    private class ExponentialFunc implements ParametricUnivariateFunction {
+        @Override
+        public double value(double v, double... doubles) {
+            //doubles[0]: sill, doubles[1]: range, doubles[2]: nugget
+//            return doubles[2] + doubles[0] * (1 - Math.exp(-3.0 * v / doubles[1])); // nugget + sill * (1-exp(-v/range))
+            return doubles[0] * (1 - Math.exp(-1.0 * v / doubles[1]));
+        }
+
+        @Override
+        public double[] gradient(double v, double... doubles) {
+            return new double[]{
+                    1.0 * (1 - Math.exp(-1.0 * v / doubles[1])), //df/d(sill) = (1 - exp(-v / range))
+                    -doubles[0] * Math.exp(-1.0 * v / doubles[1]) * 1.0 * v / (doubles[1] * doubles[1])};
+            //df/d(range) = - sill * exp(-v / range) *  v / range^2 = - v * sill * exp(-v/range) / range^2
+        }
+    }
     private final double[][] locations;
     private final double[] values;
     private final double x;
@@ -67,22 +117,34 @@ public class OrdinaryKriging {
         this.y = y;
     }
 
+    private ArrayList<WeightedObservedPoint> getPoints(){
+        int n = this.locations.length;
+        ArrayList<WeightedObservedPoint> points = new ArrayList<>();
+        HashMap<Double, Double> pointsMap = new HashMap<>();   //Key=distance(i,j), Value=(values[i]-values[j])^2
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++){
+                double key = distance(locations[i][0], locations[i][1], locations[j][0], locations[j][1]);
+                double value = Math.pow(values[i] - values[j], 2);
+                if (pointsMap.containsKey(key))
+                    value = (value + pointsMap.get(key))/2;
+                pointsMap.put(key, value);
+            }
+        for (Map.Entry<Double, Double> item : pointsMap.entrySet())
+            points.add(new WeightedObservedPoint(1.0, item.getKey(), item.getValue()));
+        return points;
+    }
+
     public double interpolate(){
         int n = this.locations.length;
-        ParametricUnivariateFunction variogramFunc = variogramFunction("Exponential");
-        CurveFitter<ParametricUnivariateFunction> curveFitter = new CurveFitter<>(new LevenbergMarquardtOptimizer());
-        for (int i = 0; i < n; i++)
-            curveFitter.addObservedPoint(distance(locations[i][0], locations[i][1], this.x, this.y), values[i]);
-        double[] initialGuess = {Math.random(), Math.random()};
-        System.out.println("fitting");
-        double[] params = curveFitter.fit(variogramFunc, initialGuess); //params[0]: sill, params[1]: range
+        CurveFitter curveFitter = new CurveFitter();
+
+        double[] params = curveFitter.fit(getPoints()); //params[0]: sill, params[1]: range, params[2]: nugget
 
         if (params[0] == 0)
             return 0.0;
-        System.out.println("interpolating");
+//        System.out.println("interpolating");
         KrigingInterpolation krigingInterpolation = new KrigingInterpolation(this.locations, this.values,
-                new ExponentialVariogram(Math.abs(params[1]), Math.abs(params[0])), null);
-
+                new MyExponentialVariogram(Math.abs(params[1]), Math.abs(params[0])), null);
         return krigingInterpolation.interpolate(this.x, this.y);
     }
 
@@ -103,13 +165,13 @@ public class OrdinaryKriging {
                 public double[] gradient(double v, double... doubles) {
                     return new double[]{
                             1.0 * (1 - Math.exp(-v / doubles[1])), //df/d(sill) = (1 - exp(-v / range))
-                    -doubles[0] * Math.exp(-v / doubles[1]) * v / (doubles[1] * doubles[1])};
+                            -doubles[0] * Math.exp(-v / doubles[1]) * v / (doubles[1] * doubles[1])};
                     //df/d(range) = - sill * exp(-v / range) *  v / range^2 = - v * sill * exp(-v/range) / range^2
                 }
             };
         return null;
     }
-//    /**OrdinaryKriging constructor
+    //    /**OrdinaryKriging constructor
 //     * @param sss list of spectrum sensors
 //     * @param txs list of transmitters
 //     * @param numSssSelected number of selected sensors to do interpolation
@@ -172,4 +234,49 @@ public class OrdinaryKriging {
 //            nearest[cnt++] = elementDistance;
 //        return nearest;
 //    }
+    private static class MyExponentialVariogram implements Variogram {
+        private double a;
+        private double b;
+        private double c;
+
+        /**
+         * Constructor. No nugget effect.
+         * @param a the range parameter.
+         * @param b the sill parameter.
+         */
+        public MyExponentialVariogram(double a, double b) {
+            this(a, b, 0.0);
+        }
+
+        /**
+         * Constructor.
+         * @param a the range parameter.
+         * @param b the sill parameter.
+         * @param c the nugget effect parameter.
+         */
+        public MyExponentialVariogram(double a, double b, double c) {
+            if (a <= 0)
+                throw new IllegalArgumentException("Invalid parameter a = " + a);
+
+            if (b <= 0)
+                throw new IllegalArgumentException("Invalid parameter b = " + b);
+
+            if (c < 0)
+                throw new IllegalArgumentException("Invalid parameter c = " + c);
+
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+
+        @Override
+        public double f(double r) {
+            return c + b * (1 - Math.exp(-1.0*r/a));
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Exponential Variogram(range = %.4f, sill = %.4f, nugget effect = %.4f)", a, b, c);
+        }
+    }
 }
