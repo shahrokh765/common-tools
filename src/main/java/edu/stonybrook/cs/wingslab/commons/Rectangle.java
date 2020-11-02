@@ -1,5 +1,8 @@
 package edu.stonybrook.cs.wingslab.commons;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
@@ -11,6 +14,7 @@ import java.util.logging.Logger;
  */
 public class Rectangle extends Shape{
     private final int width, length;
+    private static List<Point> allProbabilityPoints;
 
     /**Copy constructor
      * @param rectangle Rectangle object*/
@@ -45,6 +49,52 @@ public class Rectangle extends Shape{
         for (int i = 0; i < n; i++)
             points[i] = new Point(ThreadLocalRandom.current().nextInt(0, width),
                     ThreadLocalRandom.current().nextInt(0, length));
+        return points;
+    }
+
+    /**
+     * @param locationProbability 2d array indicating probability of locations
+     * @param width width of shape to check if locationProbability array matches the shape width
+     * @param length length of shape to check if locationProbability array matches the shape length*/
+    public static void calculateWeightedPoints(double[][] locationProbability, int width, int length){
+        if (locationProbability.length != width || locationProbability[0].length != length)
+            throw new IllegalArgumentException("Dimensions of the shape and given probability array do not match.");
+
+        double minProb = Double.MAX_VALUE;      // minProb is used to convert float values into integers while keeping the ratio
+        for (double[] row : locationProbability) {
+            for (double prob : row) {
+                minProb = Math.min(minProb, prob);
+            }
+        }
+        Rectangle.allProbabilityPoints = new ArrayList<>(length * width);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < length; y++) {
+                for (int num = 0; num < (int) Math.round(locationProbability[x][y] / minProb); num++) {
+                    Rectangle.allProbabilityPoints.add(new Point(x, y));
+                }
+            }
+        }
+    }
+
+    /**
+     * Given number of points, n, and locations' probability, this method return n random Points inside the shape.
+     * @param n number of points
+     * @return An array of n Points
+     */
+    public Point[] ProbabilityBasedPoints(int n){
+
+        Point[] points = new Point[n];
+        int cnt = 0;
+        HashSet<Integer> selectedPoints = new HashSet<>();
+        while (cnt < n){
+            Point point = Rectangle.allProbabilityPoints.get(ThreadLocalRandom.current().nextInt(0,
+                    Rectangle.allProbabilityPoints.size()));
+            int id = (int)point.getCartesian().getX() * length + (int)point.getCartesian().getY(); //unique id to not selecting a point more than once
+            if (!selectedPoints.contains(id)){
+                points[cnt++] = point;
+                selectedPoints.add(id);
+            }
+        }
         return points;
     }
 
