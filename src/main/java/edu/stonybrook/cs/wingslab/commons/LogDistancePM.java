@@ -152,7 +152,7 @@ public class LogDistancePM extends PropagationModel{
         }
         if (this.multiPathNoise) // add zero-mean multi-path gaussian noise
             loss += this.gauss.nextGaussian() * this.multiPathStd;
-        return loss;
+        return Math.max(loss, 0.0);
     }
 
     public double getAlpha() { return alpha; }

@@ -18,7 +18,7 @@ class SpectrumSensorTest {
 
     @Test
     void sensorGeneratorRandom() {
-        SpectrumSensor.sensorGeneratorRandom(400, new Square(1000), 0.732, 1.0, 15);
+        SpectrumSensor.sensorGeneratorRandom(900, new Square(100), 0.732, 1.0, 15);
     }
 
     @Test
