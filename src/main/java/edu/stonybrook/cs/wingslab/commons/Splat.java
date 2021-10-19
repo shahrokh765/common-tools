@@ -122,8 +122,10 @@ public class Splat extends PropagationModel{
             new GeographicPoint(-1.0/111111, -1.0/111111);  // offset for one meter that should be added
                                                                     // to upper_left_loc
     private static final long TIMEOUT = 200;                      // time-out(milliseconds) for the simulator to finish the calculations
-    private static final int APPROX = 10;                           // SPLAT! will not be used if there is a previous
+    private static final int APPROX = 5;                           // SPLAT! will not be used if there is a previous
                                                                     // saved path loss in vicinity of APPROX meter
+    private static final int maxX = 500;
+    private static final int maxY = 500;
     private static final String SPLAT_COMMAND = "splat";            // 'splat' or 'splat-hd'
     private static float[][][][] plDict;            // hash dictionary for path-loss values
 
@@ -171,13 +173,15 @@ public class Splat extends PropagationModel{
         int approxDestX = ((int) (dest.getLocation().getCartesian().getX() / Splat.APPROX)) * Splat.APPROX;
         int approxDestY = ((int) (dest.getLocation().getCartesian().getY() / Splat.APPROX)) * Splat.APPROX;
 
-        approxSrcX = Math.min(Math.max(approxSrcX, 0), 1000);
-        approxSrcY = Math.min(Math.max(approxSrcY, 0), 1000);
-        approxDestX = Math.min(Math.max(approxDestX, 0), 1000);
-        approxDestY = Math.min(Math.max(approxDestY, 0), 1000);
+        approxSrcX = Math.min(Math.max(approxSrcX, 0), Splat.maxX);
+        approxSrcY = Math.min(Math.max(approxSrcY, 0), Splat.maxY);
+        approxDestX = Math.min(Math.max(approxDestX, 0), Splat.maxX);
+        approxDestY = Math.min(Math.max(approxDestY, 0), Splat.maxY);
         // check if a pl values exists for both keys
-        if (Splat.plDict[approxSrcX/10][approxSrcY/10][approxDestX/10][approxDestY/10] > -1.0f) {
-            float plValue = Splat.plDict[approxSrcX/10][approxSrcY/10][approxDestX/10][approxDestY/10];
+        if (Splat.plDict[approxSrcX / Splat.APPROX][approxSrcY / Splat.APPROX][approxDestX / Splat.APPROX]
+                [approxDestY / Splat.APPROX] > -1.0f) {
+            float plValue = Splat.plDict[approxSrcX / Splat.APPROX][approxSrcY / Splat.APPROX]
+                    [approxDestX / Splat.APPROX][approxDestY / Splat.APPROX];
             this.fetchNum++;
             this.fetchTime += System.currentTimeMillis() - tmpFetchTime;
             return plValue;
