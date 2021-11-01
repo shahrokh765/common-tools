@@ -122,10 +122,10 @@ public class Splat extends PropagationModel{
             new GeographicPoint(-1.0/111111, -1.0/111111);  // offset for one meter that should be added
                                                                     // to upper_left_loc
     private static final long TIMEOUT = 200;                      // time-out(milliseconds) for the simulator to finish the calculations
-    private static final int APPROX = 5;                           // SPLAT! will not be used if there is a previous
+    private static final int APPROX = 10;                           // SPLAT! will not be used if there is a previous
                                                                     // saved path loss in vicinity of APPROX meter
-    private static final int maxX = 500;
-    private static final int maxY = 500;
+    private static final int maxX = 1000;
+    private static final int maxY = 1000;
     private static final String SPLAT_COMMAND = "splat";            // 'splat' or 'splat-hd'
     private static float[][][][] plDict;            // hash dictionary for path-loss values
 
