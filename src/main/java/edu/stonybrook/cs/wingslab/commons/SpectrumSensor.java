@@ -140,6 +140,17 @@ public class SpectrumSensor {
         sensorGenerator(filePath(numberOfSensors, grid), grid.pointsUniform(numberOfSensors), std, cost, height);
     }
 
+    public static SpectrumSensor[] uniformSensorGenerator(int numberOfSensors, Shape grid, double std, double cost,
+                                                          double height){
+        SpectrumSensor[] sss = new SpectrumSensor[numberOfSensors];
+        int idx = 0;
+        for (Point point : grid.pointsUniform(numberOfSensors)){
+            sss[idx] = new SpectrumSensor(new RX(new Element(point, height)), cost, std);
+            idx++;
+        }
+        return sss;
+    }
+
     // given number of sensors and grid shape, file name would be created
     private static String filePath(int numberOfSensors, Shape grid){
         String gridShapeFormat;
